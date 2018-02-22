@@ -6,6 +6,7 @@ from keras.models import Sequential
 #from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D
 from keras.applications import ResNet50
 from keras.layers import Conv2D , MaxPooling2D , BatchNormalization , Activation , Conv2DTranspose
+from keras.losses import binary_crossentropy
 from keras.optimizers import Adam
 from keras.regularizers import l2
 from keras import backend as K
@@ -21,16 +22,37 @@ premodels = {
 }
 
 
-def loss( img , mask ):
+def jaccard_loss( y_true , y_pred): 
+	# implementation of jaccard distance loss 
+	# recordar que la mascara esta contamidada con los pesos 
+	smooth = 100 
+
+	intersection = K.sum( K.abs( y_true*y_pred ) , axis = -1   )
+	sum_ = K.sum( K.abs( y_true )  + K.abs( y_pred ) , axis = -1 )
+	jac = (intersection + smooth)/( sum_ - intersection + smooth )
+
+	return ( 1 - jac )*smooth 
 
 
-	return 1  - bce(img , mask) + dice(img , mask )
-def dice( img , mask ):
+
+def loss( y_true , y_pred ):
+
+
+	return 1  + bce(y_true , y_pred) - dice( y_true , y_mask )
+
+def dice( y_true , y_pred ):
+	smooth = 1 
+	intersection = K.sum(  K.abs( y_true*y_pred)  , axis = -1 )
+	return ( 2.* intersection + smooth )/( K.sum( K.square(y_true) , -1 ) + K.sum(K.square(y_pred) , -1 )  + smooth )
 
 	# do something
 
-def bce( img , mask ) :
+def bce( y_true ,  y_pred ) :
 	# cross entropy con pesos
+	ws = y_true[ : , : , : , 1]
+	# return weigthed cross entropy 
+	return binary_crossentropy( y_true*ws , y_pred  )
+
 
 class DecoderBlock( Layer ):
 
@@ -142,49 +164,16 @@ class LinkNet( Layer):
 
 		return f5 
 
-
-
-def build_model( num_channels = 3 , num_classes ):
-
-	#Build the LinkNetModel
-	assert num_channels == 3 , "num something"
-	filters = [ 64 , 128 , 256 , 512 ]
-
-	resnetModel = ResNet50(weights='imagenet', pooling=max, include_top = False)
-
-	firstconv = resnet.conv1
-	firstbn = resnet.bn_conv1 
-	firstrelu = resnet.activation_1 
-	firstmaxpool = resnet.max_pooling2d_1 
-
-	encoder1 = resnet.activation_1 
-	encoder2 = resnet.activation_2 
-	encoder3 = resnet.activation_3
-	encoder4 = resnet.activation_4 
-
-	decoder1 = DecoderBlock(filters[0] , filters[0] )
-	decoder2 = DecoderBlock(filters[1] , filters[0] )
-	decoder3 = DecoderBlock(filters[2] , filters[1] )
-	decoder4 = DecoderBlock(filters[3] , filters[2] )
-
-	finaldeconv1 = Conv2DTranspose( 32 , kernel_size = 3 , strides=2 )
-	finalrelu1 = Activation("relu")
-	finalconv2 = Conv2D( 32 , kernel_size = 3)
-	finalrelu2 = Activation("relu") 
-	finalconv3 = Conv2D( 32  , num_classes , kernel_size = 2 ) 
-
-
-
+def get_model():
 
 	model = Sequential()
+	model.add( LinkNet()  )
 
-	model.add( firstconv )
-	model.add( firstbn )
-	model.add( )
-
-	model.add( Conv2D(  64 , kernel_size=(2,2),  input_shape = input_shape  )  )
-	
-	model.compile(optimizer=adam, loss=root_mean_squared_error)
+	adam = Adam( lr = 0.0001 )
+	model.compile( optimizer  = adam , loss = loss )
 
 	return model 
+
+
+
 
