@@ -15,7 +15,7 @@ from keras import backend as K
 
 input_shape = ( )
 
-input_shape_resnet = ( 224 , 224 )
+input_shape_resnet = ( 224 , 224  , 4)
 
 premodels = {
 	"resnet" : ResNet50
@@ -167,7 +167,7 @@ class LinkNet( Layer):
 def get_model():
 
 	model = Sequential()
-	model.add( LinkNet()  )
+	model.add( LinkNet(input_shape = input_shape_resnet )  )
 
 	adam = Adam( lr = 0.0001 )
 	model.compile( optimizer  = adam , loss = loss )
