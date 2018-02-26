@@ -11,20 +11,44 @@ from keras.optimizers import Adam
 from keras.regularizers import l2
 from keras import backend as K
 from keras.engine.topology import Layer 
-from keras import backend as K 
 
-input_shape = ( )
+from  encoders import *
 
-input_shape_resnet = ( 224 , 224  , 4)
+
+input_shape_resnet = ( 224 , 224  , 3)
 
 premodels = {
 	"resnet" : ResNet50
 }
+lencoder1 = [
+"res2a_branch2a" ,
+ "bn2a_branch2a" ,
+ "activation_2" ,
+]
 
-
+lencoder2 = ["res2a_branch2b" ,
+"bn2a_branch2b" ,
+"activation_3" ,
+]
+lencoder3 = [
+"res2a_branch2b" ,
+ "bn2a_branch2b" , 
+ "activation_3"
+]
+lencoder4 = [
+"res2a_branch2c" , 
+ "res2a_branch1" , 
+ "bn2a_branch2c" ,
+ "bn2a_branch1" ,
+ "add_1" ,
+ "activation_4" 
+]
 def jaccard( y_true , y_pred): 
 	# implementation of jaccard distance loss 
 	# recordar que la mascara esta contamidada con los pesos 
+	# y_true includes de weigths 
+	y_true = y_true[: , : , : , 0 ]
+
 	smooth = 100 
 	
 	intersection = K.sum( K.abs( y_true*y_pred ) , axis = -1   )
@@ -50,6 +74,7 @@ def dice( y_true , y_pred ):
 def bce( y_true ,  y_pred ) :
 	# cross entropy con pesos
 	ws = y_true[ : , : , : , 1]
+	y_true = y_true[: , : , : , 0] 
 	# return weigthed cross entropy 
 	return binary_crossentropy( y_true*ws , y_pred  )
 
@@ -57,12 +82,12 @@ def bce( y_true ,  y_pred ) :
 class DecoderBlock( Layer ):
 
 	def __init__( self, in_channels , n_filters ):
-
-		self.output_dim = output_dim
+		# 512 256 
+		#self.output_dim = output_dim
 		self.in_channels = in_channels
 		self.n_filters = n_filters 
 
-		super( DecoderBlock , self )
+		super( DecoderBlock , self ).__init__()
 
 	def build( self , input_shape ):
 
@@ -73,6 +98,7 @@ class DecoderBlock( Layer ):
 
 
 		self.deconv2 = Conv2DTranspose( self.in_channels// 4 , kernel_size = 3 , strides = 2 , )
+		
 		self.norm2 = BatchNormalization()
 		self.relu2 = Activation("relu")
 
@@ -86,45 +112,89 @@ class DecoderBlock( Layer ):
 	def call( self, x ):
 
 		x = self.conv1( x )
+		print("shape conv1 decoder")
+		print(x.shape)
 		x = self.norm1( x )
+		print("shape norm decoder")
+		print(x.shape)
+
 		x = self.relu1( x )
+		tmp_shape = x.shape 
+
 		x = self.deconv2( x )
 		x = self.norm2( x )
+		x.set_shape( tmp_shape )
+		print("shape norm2 decoder")
+		print(x.shape )
 		x = self.relu2(x )
 		x = self.conv3(x)
 		x = self.norm3(x)
-		x = self.relu(3)
-
+		x = self.relu3(x)
+		print( "decoder output shape ")
+		print(x.shape)
 		return x 
 
 
 		#return K.dot( x , self.kernel )
+class Encoder( Layer ):
 
+	def __init__( self , resnet , layer_names ):
+		# recieves a 
+		self.resnet = resnet
+		self.layers = []
+		self.name = "enc"
+		self.layer_names = layer_names
+		super( Encoder , self).__init__()
+		return
+	def build(self , input_shape) :
+
+
+		for layers in self.layer_names:
+			# layers es una lista 
+			self.layers.append( self.resnet.get_layer(layer) )
+
+
+		super(Encoder , self ).build( input_shape)
+		return
+	def call(self , x):
+
+		for l in self.layers:
+			x = l(x)
+
+		return x 
 
 class LinkNet( Layer):
 
-	def __init__( self , num_channels = 3  ) :
+	def __init__( self ,  input_shape = input_shape_resnet ,num_channels = 3  ) :
 
 		self.num_channels = num_channels
+		self.num_classes = 1 
+		super( LinkNet , self ).__init__( input_shape = input_shape_resnet)
 
 		#
 	def build(self, input_shape ):
 		# aqui la red
 		filters = [ 64 , 128 , 256 , 512 ]
 
-		resnetModel = ResNet50(weights='imagenet', pooling=max, include_top = False)
+		resnet = ResNet50(weights='imagenet', pooling=max, include_top = False)
 
-		self.firstconv = resnet.conv1
-		self.firstbn = resnet.bn_conv1 
-		self.firstrelu = resnet.activation_1 
-		self.firstmaxpool = resnet.max_pooling2d_1 
+		#self.firstconv = resnet. conv1
+		self.firstconv = resnet.get_layer("conv1")
+		self.firstbn = resnet.get_layer("bn_conv1")
+		self.firstrelu = resnet.get_layer("activation_1") 
+		self.firstmaxpool = resnet.get_layer("max_pooling2d_1")
 
-		self.encoder1 = resnet.activation_1 
-		self.encoder2 = resnet.activation_2 
-		self.encoder3 = resnet.activation_3
-		self.encoder4 = resnet.activation_4 
+		#self.encoder1 = resnet.get_layer("activation_1")  #.activation_1 
+		self.encoder1 = Encoder1( resnet )
+		#self.encoder2 = resnet.get_layer("activation_2") #activation_2 
+		self.encoder2 = Encoder2( resnet )
+		#self.encoder3 = resnet.get_layer("activation_3") #activation_3
+		self.encoder3 = Encoder3(resnet , self.firstmaxpool )
+		#self.encoder4 = resnet.get_layer("activation_4") #activation_4 
+		self.encoder4 = Encoder4( resnet  )
 
 		self.decoder1 = DecoderBlock(filters[0] , filters[0] )
+
 		self.decoder2 = DecoderBlock(filters[1] , filters[0] )
 		self.decoder3 = DecoderBlock(filters[2] , filters[1] )
 		self.decoder4 = DecoderBlock(filters[3] , filters[2] )
@@ -133,23 +203,36 @@ class LinkNet( Layer):
 		self.finalrelu1 = Activation("relu")
 		self.finalconv2 = Conv2D( 32 , kernel_size = 3)
 		self.finalrelu2 = Activation("relu") 
-		self.finalconv3 = Conv2D( 32  , num_classes , kernel_size = 2 ) 
+		self.finalconv3 = Conv2D( filters  = self.num_classes , kernel_size = 2 ) 
 
 
-		super( LinkNet , self).build(input_shape)
+		super( LinkNet , self).build( input_shape )
 
 	def call( self , x ):
 		# VERIFICAR X DEBE SER LA ENTRADA QUE RECIVE EL RESNET
 		# EL SHAPE ADECuado
+		print( "inpuy shape")
+		print(x.shape)
 		x = self.firstconv( x )
 		x = self.firstbn(x )
 		x = self.firstrelu(x )
 		x = self.firstmaxpool( x )
-
+		print( "first layer  shape")
+		print( x.shape )
 		e1 = self.encoder1( x )
 		e2 = self.encoder2( e1 )
 		e3 = self.encoder3( e2 )
+		print("good")
+		print(e3.shape)
 		e4 = self.encoder4( e3 )
+
+		print("encoder shapes ")
+		print(e1.shape )
+		print(e2.shape )
+		print(e3.shape )
+		print(e4.shape )
+
+		print(" decoder 3 shape ")
 
 		d4 = self.decoder4( e4 ) + e3 
 		d3 = self.decoder3( d4 ) + e2 
@@ -167,7 +250,7 @@ class LinkNet( Layer):
 def get_model():
 
 	model = Sequential()
-	model.add( LinkNet(input_shape = input_shape_resnet )  )
+	model.add( LinkNet( input_shape = input_shape_resnet )  )
 
 	adam = Adam( lr = 0.0001 )
 	model.compile( optimizer  = adam , loss = loss )

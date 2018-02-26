@@ -12,7 +12,7 @@ prefix = "../data/ready"
 
 params = {'imw': 32,
 'imh': 32,
-'channels': 4,
+'channels': 3,
 'batch_size': batch_size,
 'shuffle': True}
 
