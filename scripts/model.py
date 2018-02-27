@@ -5,7 +5,7 @@
 from keras.models import Sequential
 #from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D
 from keras.applications import ResNet50
-from keras.layers import Conv2D , MaxPooling2D , BatchNormalization , Activation , Conv2DTranspose
+from keras.layers import Conv2D , MaxPooling2D , BatchNormalization , Activation , Conv2DTranspose , Input 
 from keras.losses import binary_crossentropy
 from keras.optimizers import Adam
 from keras.regularizers import l2
@@ -79,7 +79,7 @@ def bce( y_true ,  y_pred ) :
 	return binary_crossentropy( y_true*ws , y_pred  )
 
 
-class DecoderBlock( Layer ):
+class DecoderBlock22( Layer ):
 
 	def __init__( self, in_channels , n_filters ):
 		# 512 256 
@@ -168,7 +168,8 @@ class LinkNet( Layer):
 	def __init__( self ,  input_shape = input_shape_resnet ,num_channels = 3  ) :
 
 		self.num_channels = num_channels
-		self.num_classes = 1 
+		self.num_classes = 1
+		self.build(input_shape)
 		super( LinkNet , self ).__init__( input_shape = input_shape_resnet)
 
 		#
@@ -255,7 +256,38 @@ def get_model():
 	adam = Adam( lr = 0.0001 )
 	model.compile( optimizer  = adam , loss = loss )
 
-	return model 
+	return model
+
+def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
+
+	linknet = LinkNet2( input_shape = input_shape_resnet )
+
+
+	inputs = Input(shape = input_shape_resnet )
+
+	x = linknet.firstconv(inputs)
+	x = linknet.firstbn(x)
+	x = linknet.firstrelu(x)
+	x = linknet.firstmaxpool(x)
+	
+	e1 = linknet.encoder1.call2(x )
+	e2 = linknet.encoder2.call2( e1 )
+	e3 = linknet.encoder3.call2( e2 )
+	
+	e4 = linknet.encoder4.call2( e3 )
+
+	print( "encoders shapes ")
+	print( e1.shape )
+	print( e2.shape )
+	print( e3.shape )
+	print( e4.shape )
+	#d4 = linknet.decoder4( e4 )
+
+	d4 = linknet.decoder4.call2( e4 ) + e3 
+	
+	return linknet 
+
+
 
 
 
