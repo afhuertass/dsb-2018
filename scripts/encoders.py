@@ -130,7 +130,12 @@ class Encoder3(  ):
 		x = self.c2( x )
 		p2 = self.c3( p1 )	
 		#x = self.c4( x , p2 )
-		x = self.c5( x + p2 ) 
+		#embedding_sum = Lambda(lambda x: K.sum(x, axis=1), output_shape=lambda s: (s[0], s[2]))(embed)
+		print( self.c4 )
+		#y = self.c4 ( [ x , p2 ] ) 
+		y = keras.layers.Add() ([ x , p2 ] )
+		x = self.c5( y )
+		#x = self.c5( x + p2 ) 
 		print(" output shape encoder3 ")
 		print(x.shape)
 		return x
@@ -177,6 +182,8 @@ class LinkNet2( object ):
 
 		resnet = ResNet50(weights='imagenet', pooling=max, include_top = False)
 
+		self.input = resnet.get_layer("input_1")
+
 		#self.firstconv = resnet. conv1
 		self.firstconv = resnet.get_layer("conv1")
 		self.firstbn = resnet.get_layer("bn_conv1")
@@ -195,11 +202,19 @@ class LinkNet2( object ):
 		self.decoder1 = DecoderBlock(filters[0] , filters[0]  , input_shape = input_shape_resnet )
 
 		self.decoder2 = DecoderBlock(filters[1] , filters[0]  , input_shape = [-1 , 55 , 55 , 64] )
-		self.decoder3 = DecoderBlock(filters[2] , filters[1]  , input_shape = [-1 , 55 , 55 , 64] )
+		self.decoder3 = DecoderBlock(filters[2] , filters[0]  , input_shape = [-1 , 55 , 55 , 64] )
 		self.decoder4 = DecoderBlock(filters[3] , filters[2]  , input_shape = [-1 , 55, 55 , 64]  )
 
 		self.finaldeconv1 = Conv2DTranspose( 32 , kernel_size = 3 , strides=2 )
+		
+		#self.finaldeconv1.set_shape( [ None , 55 , 55 , 32 ]  )
 		self.finalrelu1 = Activation("relu")
 		self.finalconv2 = Conv2D( 32 , kernel_size = 3)
 		self.finalrelu2 = Activation("relu") 
-		self.finalconv3 = Conv2D( filters  = self.num_classes , kernel_size = 2 ) 
+		self.finalconv3 = Conv2D( filters  = self.num_classes , kernel_size = 2 )
+
+	def get_input(self):
+
+		return self.input 
+		
+

@@ -3,6 +3,7 @@
 # file to build the keras linknet model
 
 from keras.models import Sequential
+from keras.models import Model
 #from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D
 from keras.applications import ResNet50
 from keras.layers import Conv2D , MaxPooling2D , BatchNormalization , Activation , Conv2DTranspose , Input 
@@ -262,8 +263,9 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 
 	linknet = LinkNet2( input_shape = input_shape_resnet )
 
+	inputs = linknet.get_input().output 
 
-	inputs = Input(shape = input_shape_resnet )
+	#inputs = Input(shape = input_shape_resnet )
 
 	x = linknet.firstconv(inputs)
 	x = linknet.firstbn(x)
@@ -283,9 +285,36 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 	print( e4.shape )
 	#d4 = linknet.decoder4( e4 )
 
-	d4 = linknet.decoder4.call2( e4 ) + e3 
+	d4 = linknet.decoder4.call2( e4 ) + e3
+
+	d3 = linknet.decoder3.call2( d4 ) + e2 
+	d2 = linknet.decoder2.call2( d3 )  + e1 
+	d1 = linknet.decoder1.call2( d2 )
+	print( "de encoders shape")
+
+	print( d4.shape )
+	print( d3.shape )
+	print( d2.shape )
+	print( d1.shape )
+
+
+	#f1 = linknet.finaldeconv1( d1 )
+	#f1.set_shape( [None , 55 , 55 , 32 ])
+	#f2 = linknet.finalrelu1(f1)
+	#f3 = linknet.finalconv2( f2 )
+	#f4 = linknet.finalrelu2( f3 )
+	#f5 = linknet.finalconv3( f4 )
+
+	#print( f5 )
+	#x = Conv2DTranspose( 32 , kernel_size = 3 , strides=2 )( d1 )
+	#x = Activation("relu")(x)
+	#x = Conv2D( 32 , kernel_size = 3)(x)
+	#x = Activation("relu")(x)
+	#x = Conv2D( filters  = 1 , kernel_size = 2 )(x)
+
+	model = Model( inputs = inputs , outputs = e3 )
 	
-	return linknet 
+	return model 
 
 
 
