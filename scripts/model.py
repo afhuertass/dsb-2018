@@ -185,7 +185,7 @@ class LinkNet( Layer):
 		# aqui la red
 		filters = [ 64 , 128 , 256 , 512 ]
 
-		resnet = ResNet50(weights='imagenet', pooling=max, include_top = False)
+		resnet = ResNet50(weights='imagenet' , include_top = False  ) #, pooling=max, include_top = False)
 
 		#self.firstconv = resnet. conv1
 		self.firstconv = resnet.get_layer("conv1")
@@ -267,11 +267,11 @@ def get_model():
 	return model
 
 def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
-
+	K.set_image_data_format('channels_last')
 	linknet = LinkNet2( input_shape = input_shape_resnet )
 
 	inputs = linknet.get_input().output 
-	inputs.set_shape( (None , 224,224 , 3 ))
+	inputs.set_shape( (2 , 224,224 , 3 ))
 	print( inputs.shape )
 	#inputs = Input(shape = input_shape_resnet )
 
@@ -292,6 +292,7 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 	print( e2.shape )
 	print( e3.shape )
 	print( e4.shape )
+
 	#d4 = linknet.decoder4( e4 )
 
 	#d4 = linknet.decoder4.call2( e4 ) + e3
@@ -299,7 +300,7 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 
 	#print( "e2 upsampled ")
 	#print(e2.shape)
-	d4 = keras.layers.Add() ([  linknet.decoder4.call2(e4) , e3 ] )
+	d4 = keras.layers.Add() ([   e3 , linknet.decoder4.call2(e4)  ] )
 	#d3 = linknet.decoder3.call2( d4 ) + e2
 	d3 = keras.layers.Add() ([  linknet.decoder3.call2(d4) , e2 ] )
 	#d2 = linknet.decoder2.call2( d3 )  + e1 
@@ -315,14 +316,25 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 
 
 	f1 = linknet.finaldeconv1( d1 )
-	f1.set_shape( [None , 55 , 55 , 32 ])
-	f2 = linknet.finalrelu1(f1)
-	f2 = linknet.finalup1( f2 )
+	f1.set_shape( [ 2 , d1.shape[1] , d1.shape[2] , 32 ])
+
+	f2 = Activation("relu")( f1 )
+
+	#f2 = linknet.finalup1( f2 )
 	f3 = linknet.finalconv2( f2 )
 	f4 = linknet.finalrelu2( f3 )
-	f4 = linknet.finalup2( f4 )
+	#f4 = linknet.finalup2( f4 )
 	f5 = linknet.finalconv3( f4 )
 
+
+	print( "last layer shapes")
+	print( f1.shape )
+	print( f2.shape )
+	print( f3.shape )
+	print( f4.shape )
+	print( f5.shape )
+
+	#f5.set_shape( (2 , 224 , 224 , 1 ))
 	#print( f5 )
 	#x = Conv2DTranspose( 32 , kernel_size = 3 , strides=2 )( d1 )
 	#x = Activation("relu")(x)

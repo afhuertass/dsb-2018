@@ -72,8 +72,8 @@ def prepare_data( paths , output  ):
 
 
 if __name__ == "__main__":
-	paths = "../../data/data/"
-	output = "../../data/ready/"
+	paths = "../data/data/"
+	output = "../data/ready"
 	prepare_data( paths , output)
 
 

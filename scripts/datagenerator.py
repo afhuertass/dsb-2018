@@ -66,6 +66,8 @@ class DataGenerator(object):
 
 				imgs , masks = self._data_generation( prefix , labels , list_IDS_tmps )
 
+				#print("shape output generator")
+				#print( imgs.shape )
 				yield imgs , masks 
 
 
@@ -94,7 +96,7 @@ class DataGenerator(object):
 
 			x_partial = np.load( prefix +  "/imgs/" + str(idd) +'.npy')
 			y_partial = np.load( prefix + "/masks/" + str(idd) + ".npy" ) 
-			print(y_partial.shape)
+			#print(y_partial.shape)
 			x , y = transform_images( x_partial , y_partial , self.W , self.H )
 			
 			# 

@@ -12,7 +12,7 @@ from datagenerator import DataGenerator
 
 batch_size = 2
 prefix = "../data/ready"
-ids = range(100)
+ids = range(32)
 
 params = {'imw': 32,
 'imh': 32,
@@ -29,7 +29,7 @@ def train():
 
 	linknet.compile(loss = model.loss , optimizer = "adam"  , metrics=['accuracy'] )
 
-
+	linknet.fit_generator(generator = training_generator , steps_per_epoch = 2   )
 
 
 if __name__ =="__main__":

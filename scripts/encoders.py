@@ -28,25 +28,27 @@ class DecoderBlock( ):
 	def build( self ):
 
 		## aqui va la el bloque
-		self.conv1 = Conv2D( self.in_channels //4  , kernel_size = 1 , input_shape = self.input_shape )
+		self.conv1 = Conv2D( self.in_channels //4  , kernel_size = 1 ) #, input_shape = self.input_shape 
 		self.norm1 = BatchNormalization()
 		self.relu1 = Activation("relu")
+		# ( B , H , W , C/4 )
 
-
-		self.deconv2 = Conv2DTranspose( self.in_channels// 4 , kernel_size = 3 , strides = 2 , )
-		
+		self.deconv2 = Conv2DTranspose( self.in_channels// 4 , kernel_size = 3 , strides = 2 ,  padding = "same")
 		self.norm2 = BatchNormalization()
 		self.relu2 = Activation("relu")
+		# ( B , H , W , C/4 )
 
 		self.conv3 = Conv2D( self.n_filters , kernel_size = 1  )
 		self.norm3 = BatchNormalization()
 		self.relu3 = Activation("relu")
 
 	def call2( self , x ):
-
+		print( "inputs decoded")
+		print( x.shape )
 		x = self.conv1( x )
 		x = self.norm1( x )
-		
+		print( "inputs decoder -- first conv ")
+		print( x.shape )
 		x = self.relu1( x )
 		tmp_shape = x.shape 
 
@@ -58,7 +60,9 @@ class DecoderBlock( ):
 		x = self.conv3(x)
 		x = self.norm3(x)
 		x = self.relu3(x)
-		
+		print("output decoder")
+		print( x.shape )
+
 		return x 
 
 
@@ -122,18 +126,18 @@ class Encoder3(  ):
 		self.c3 = self.resnet.get_layer( "bn2a_branch1" )
 		self.c4 = self.resnet.get_layer("add_1")
 		self.c5 = self.resnet.get_layer( "activation_4" )
-		
+		print("fsdfsd")
+		print( self.c5.output )
 
 	def call2(self , x ) :
 
 		x = self.c0( x )
-		p1 = self.c1( self.max_polling.get_output_at(0) )
+		p1 =  self.c1( self.max_polling.get_output_at(0) )
 		p1.set_shape( x.shape )
 		x = self.c2( x )
 		p2 = self.c3( p1 )	
 		#x = self.c4( x , p2 )
 		#embedding_sum = Lambda(lambda x: K.sum(x, axis=1), output_shape=lambda s: (s[0], s[2]))(embed)
-		print( self.c4 )
 		#y = self.c4 ( [ x , p2 ] ) 
 		y = keras.layers.Add() ([ x , p2 ] )
 		x = self.c5( y )
@@ -202,10 +206,9 @@ class LinkNet2( object ):
 		self.encoder4 = Encoder4( resnet  )
 
 		self.decoder1 = DecoderBlock(filters[0] , filters[0]  , input_shape = input_shape_resnet )
-
 		self.decoder2 = DecoderBlock(filters[1] , filters[0]  , input_shape = [-1 , 55 , 55 , 64] )
 		self.decoder3 = DecoderBlock(filters[2] , filters[0]  , input_shape = [-1 , 55 , 55 , 64] )
-		self.decoder4 = DecoderBlock(filters[3] , filters[2]  , input_shape = [-1 , 55, 55 , 64]  )
+		self.decoder4 = DecoderBlock(filters[2] , filters[0]  , input_shape = [-1 , 55, 55 , 64]  )
 
 		self.finaldeconv1 = Conv2DTranspose( 32 , kernel_size = 3 , strides=2 )
 		
