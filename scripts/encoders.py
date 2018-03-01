@@ -1,7 +1,7 @@
 
 from keras.engine.topology import Layer
 from keras.applications import ResNet50
-from keras.layers import Conv2D , MaxPooling2D , BatchNormalization , Activation , Conv2DTranspose , Input 
+from keras.layers import Conv2D , MaxPooling2D , BatchNormalization , Activation , Conv2DTranspose , Input , UpSampling2D
 from keras.losses import binary_crossentropy
 from keras.optimizers import Adam
 from keras.regularizers import l2
@@ -96,12 +96,14 @@ class Encoder2(  ):
 		self.c0 = self.resnet.get_layer("res2a_branch2b")
 		self.c1 = self.resnet.get_layer( "bn2a_branch2b")
 		self.c2 = self.resnet.get_layer( "activation_3" )
+		
 
 	def call2( self , x ):
 
 		x = self.c0(x)
 		x = self.c1(x)
 		x = self.c2(x)
+		
 		return x 
 
 class Encoder3(  ):
@@ -209,9 +211,12 @@ class LinkNet2( object ):
 		
 		#self.finaldeconv1.set_shape( [ None , 55 , 55 , 32 ]  )
 		self.finalrelu1 = Activation("relu")
+		self.finalup1 = UpSampling2D( (2,2) )
 		self.finalconv2 = Conv2D( 32 , kernel_size = 3)
-		self.finalrelu2 = Activation("relu") 
+		self.finalrelu2 = Activation("relu")
+		self.finalup2 = UpSampling2D((2,2))
 		self.finalconv3 = Conv2D( filters  = self.num_classes , kernel_size = 2 )
+
 
 	def get_input(self):
 

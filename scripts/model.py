@@ -6,7 +6,7 @@ from keras.models import Sequential
 from keras.models import Model
 #from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D
 from keras.applications import ResNet50
-from keras.layers import Conv2D , MaxPooling2D , BatchNormalization , Activation , Conv2DTranspose , Input 
+from keras.layers import Conv2D , MaxPooling2D , BatchNormalization , Activation , Conv2DTranspose , Input , UpSampling2D
 from keras.losses import binary_crossentropy
 from keras.optimizers import Adam
 from keras.regularizers import l2
@@ -264,15 +264,17 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 	linknet = LinkNet2( input_shape = input_shape_resnet )
 
 	inputs = linknet.get_input().output 
-
+	inputs.set_shape( (None , 224,224 , 3 ))
+	print( inputs.shape )
 	#inputs = Input(shape = input_shape_resnet )
 
 	x = linknet.firstconv(inputs)
 	x = linknet.firstbn(x)
 	x = linknet.firstrelu(x)
 	x = linknet.firstmaxpool(x)
-	
-	e1 = linknet.encoder1.call2(x )
+	print("x shape")
+	print(x.shape)
+	e1 = linknet.encoder1.call2( x )
 	e2 = linknet.encoder2.call2( e1 )
 	e3 = linknet.encoder3.call2( e2 )
 	
@@ -285,10 +287,17 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 	print( e4.shape )
 	#d4 = linknet.decoder4( e4 )
 
-	d4 = linknet.decoder4.call2( e4 ) + e3
+	#d4 = linknet.decoder4.call2( e4 ) + e3
+	#e2 = UpSampling2D((2, 2))(  e2 ) 
 
-	d3 = linknet.decoder3.call2( d4 ) + e2 
-	d2 = linknet.decoder2.call2( d3 )  + e1 
+	#print( "e2 upsampled ")
+	#print(e2.shape)
+	d4 = keras.layers.Add() ([  linknet.decoder4.call2(e4) , e3 ] )
+	#d3 = linknet.decoder3.call2( d4 ) + e2
+	d3 = keras.layers.Add() ([  linknet.decoder3.call2(d4) , e2 ] )
+	#d2 = linknet.decoder2.call2( d3 )  + e1 
+	d2 = keras.layers.Add() ([  linknet.decoder2.call2(d3) , e1 ] )
+
 	d1 = linknet.decoder1.call2( d2 )
 	print( "de encoders shape")
 
@@ -298,12 +307,14 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 	print( d1.shape )
 
 
-	#f1 = linknet.finaldeconv1( d1 )
-	#f1.set_shape( [None , 55 , 55 , 32 ])
-	#f2 = linknet.finalrelu1(f1)
-	#f3 = linknet.finalconv2( f2 )
-	#f4 = linknet.finalrelu2( f3 )
-	#f5 = linknet.finalconv3( f4 )
+	f1 = linknet.finaldeconv1( d1 )
+	f1.set_shape( [None , 55 , 55 , 32 ])
+	f2 = linknet.finalrelu1(f1)
+	f2 = linknet.finalup1( f2 )
+	f3 = linknet.finalconv2( f2 )
+	f4 = linknet.finalrelu2( f3 )
+	f4 = linknet.finalup2( f4 )
+	f5 = linknet.finalconv3( f4 )
 
 	#print( f5 )
 	#x = Conv2DTranspose( 32 , kernel_size = 3 , strides=2 )( d1 )
@@ -311,8 +322,9 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 	#x = Conv2D( 32 , kernel_size = 3)(x)
 	#x = Activation("relu")(x)
 	#x = Conv2D( filters  = 1 , kernel_size = 2 )(x)
-
-	model = Model( inputs = inputs , outputs = e3 )
+	print( "output_shape")
+	print( f5.shape )
+	model = Model( inputs = inputs , outputs = f5  )
 	
 	return model 
 

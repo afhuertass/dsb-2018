@@ -25,6 +25,9 @@ def train():
 	
 	training_generator = DataGenerator(**params).generate( prefix , ids , ids )
 	linknet = model.get_model2( )
+	
+
+	#linknet.compile(loss = model.loss , optimizer = "adam"  , metrics=['accuracy'] )
 
 
 
