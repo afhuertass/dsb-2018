@@ -60,10 +60,10 @@ def jaccard( y_true , y_pred):
 
 
 
-def loss( y_true , y_pred ):
+def loss( y_true , y_pred   ):
 
-
-	return 1  + bce(y_true , y_pred) - dice( y_true , y_mask )
+	ws = 1.0 
+	return 1  + bce(y_true , y_pred , ws ) - dice( y_true , y_pred )
 
 def dice( y_true , y_pred ):
 	smooth = 1 
@@ -72,10 +72,17 @@ def dice( y_true , y_pred ):
 
 	# do something
 
-def bce( y_true ,  y_pred ) :
+def bce( y_true,  y_pred , ws ) :
 	# cross entropy con pesos
-	ws = y_true[ : , : , : , 1]
-	y_true = y_true[: , : , : , 0] 
+	#ws = y_pred[ : , : , : , ]
+	#y_true = y_true[: , : , : , 0]
+
+	print("zeip of you")
+	print( y_true.shape )
+	print( y_pred.shape )
+	
+	y_pred.set_shape( (None , None , None , 1 ))
+	
 	# return weigthed cross entropy 
 	return binary_crossentropy( y_true*ws , y_pred  )
 
@@ -323,7 +330,8 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 	#x = Activation("relu")(x)
 	#x = Conv2D( filters  = 1 , kernel_size = 2 )(x)
 	print( "output_shape")
-	print( f5.shape )
+	print( f5  )
+	#f5.set_output( (None, None, None))
 	model = Model( inputs = inputs , outputs = f5  )
 	
 	return model 
