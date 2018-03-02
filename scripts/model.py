@@ -185,14 +185,16 @@ class LinkNet( Layer):
 		# aqui la red
 		filters = [ 64 , 128 , 256 , 512 ]
 
-		resnet = ResNet50(weights='imagenet' , include_top = False  ) #, pooling=max, include_top = False)
+		resnet = ResNet50(weights='imagenet' , pooling = max ,include_top = False  ) #, pooling=max, include_top = False)
 
 		#self.firstconv = resnet. conv1
 		self.firstconv = resnet.get_layer("conv1")
+		print("ola que hace ")
+		
 		self.firstbn = resnet.get_layer("bn_conv1")
 		self.firstrelu = resnet.get_layer("activation_1") 
 		self.firstmaxpool = resnet.get_layer("max_pooling2d_1")
-
+		print( self.firstconv.shape )
 		#self.encoder1 = resnet.get_layer("activation_1")  #.activation_1 
 		self.encoder1 = Encoder1( resnet )
 		#self.encoder2 = resnet.get_layer("activation_2") #activation_2 
@@ -276,6 +278,8 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 	#inputs = Input(shape = input_shape_resnet )
 
 	x = linknet.firstconv(inputs)
+	print("xxxxx shape")
+	print(x.shape)
 	x = linknet.firstbn(x)
 	x = linknet.firstrelu(x)
 	x = linknet.firstmaxpool(x)

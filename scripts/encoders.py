@@ -195,7 +195,7 @@ class LinkNet2( object ):
 		#self.firstconv = resnet. conv1
 		self.firstconv = resnet.get_layer("conv1")
 		print("Hola ke aze")
-		print( self.firstconv.get_weights()[0].shape)
+		print( self.firstconv.input_shape )
 		self.firstbn = resnet.get_layer("bn_conv1")
 		self.firstrelu = resnet.get_layer("activation_1") 
 		self.firstmaxpool = resnet.get_layer("max_pooling2d_1")
