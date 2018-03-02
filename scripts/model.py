@@ -300,14 +300,20 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 
 	#print( "e2 upsampled ")
 	#print(e2.shape)
-	d4 = keras.layers.Add() ([   e3 , linknet.decoder4.call2(e4)  ] )
-	#d3 = linknet.decoder3.call2( d4 ) + e2
-	d3 = keras.layers.Add() ([  linknet.decoder3.call2(d4) , e2 ] )
-	#d2 = linknet.decoder2.call2( d3 )  + e1 
-	d2 = keras.layers.Add() ([  linknet.decoder2.call2(d3) , e1 ] )
+	d4 = linknet.decoder4.call2(e4 , ( e3.shape[1]  , e3.shape[2] )  )
+	d4 = keras.layers.Add() ([   e3 , d4  ] )
 
-	d1 = linknet.decoder1.call2( d2 )
-	print( "de encoders shape")
+	#d3 = linknet.decoder3.call2( d4 ) + e2
+	d3 = linknet.decoder3.call2(d4 , (e2.shape[1] , e3.shape[2]  )) 
+	d3 = keras.layers.Add() ([  d3 , e2 ] )
+	#d2 = linknet.decoder2.call2( d3 )  + e1 
+
+	d2 = linknet.decoder2.call2(d3 , (e1.shape[1] , e1.shape[2])  )
+	d2 = keras.layers.Add() ([  d2 , e1 ] )
+	print( "dedede")
+	print( d2.shape )
+	d1 = linknet.decoder1.call2( d2 , ( d2.shape[1]  , d2.shape[2] ) )
+	print( "decoders shape")
 
 	print( d4.shape )
 	print( d3.shape )
@@ -316,7 +322,7 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 
 
 	f1 = linknet.finaldeconv1( d1 )
-	f1.set_shape( [ 2 , d1.shape[1] , d1.shape[2] , 32 ])
+	#f1.set_shape( [ 2 , d1.shape[1] , d1.shape[2] , 32 ])
 
 	f2 = Activation("relu")( f1 )
 

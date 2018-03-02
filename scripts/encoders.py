@@ -17,12 +17,13 @@ input_shape_resnet = ( 224 , 224  , 3)
 
 class DecoderBlock( ):
 
-	def __init__( self, in_channels , n_filters  , input_shape ):
+	def __init__( self, in_channels , n_filters , input_shape = ()  ):
 		# 512 256 
 		#self.output_dim = output_dim
 		self.in_channels = in_channels
 		self.n_filters = n_filters 
-		self.input_shape = input_shape 
+		self.input_shape = input_shape
+		
 		self.build(   )
 
 	def build( self ):
@@ -42,7 +43,7 @@ class DecoderBlock( ):
 		self.norm3 = BatchNormalization()
 		self.relu3 = Activation("relu")
 
-	def call2( self , x ):
+	def call2( self , x , spatial_dims  ):
 		print( "inputs decoded")
 		print( x.shape )
 		x = self.conv1( x )
@@ -60,7 +61,9 @@ class DecoderBlock( ):
 		x = self.conv3(x)
 		x = self.norm3(x)
 		x = self.relu3(x)
+
 		print("output decoder")
+		x.set_shape( (None , spatial_dims[0] , spatial_dims[1] , self.n_filters ) )
 		print( x.shape )
 
 		return x 
@@ -208,7 +211,7 @@ class LinkNet2( object ):
 		self.decoder1 = DecoderBlock(filters[0] , filters[0]  , input_shape = input_shape_resnet )
 		self.decoder2 = DecoderBlock(filters[1] , filters[0]  , input_shape = [-1 , 55 , 55 , 64] )
 		self.decoder3 = DecoderBlock(filters[2] , filters[0]  , input_shape = [-1 , 55 , 55 , 64] )
-		self.decoder4 = DecoderBlock(filters[2] , filters[0]  , input_shape = [-1 , 55, 55 , 64]  )
+		self.decoder4 = DecoderBlock(filters[2] , filters[2]  , input_shape = [-1 , 55, 55 , 64]  )
 
 		self.finaldeconv1 = Conv2DTranspose( 32 , kernel_size = 3 , strides=2 )
 		
