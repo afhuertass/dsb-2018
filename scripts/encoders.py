@@ -32,6 +32,8 @@ class DecoderBlock( ):
 		self.conv1 = Conv2D( self.in_channels //4  , kernel_size = 1 ) #, input_shape = self.input_shape 
 		self.norm1 = BatchNormalization()
 		self.relu1 = Activation("relu")
+
+
 		# ( B , H , W , C/4 )
 
 		self.deconv2 = Conv2DTranspose( self.in_channels// 4 , kernel_size = 3 , strides = 2 ,  padding = "same")
@@ -43,11 +45,12 @@ class DecoderBlock( ):
 		self.norm3 = BatchNormalization()
 		self.relu3 = Activation("relu")
 
-	def call2( self , x , spatial_dims  ):
+	def call2( self , x   ):
 		print( "inputs decoded")
 		print( x.shape )
 		x = self.conv1( x )
 		x = self.norm1( x )
+
 		print( "inputs decoder -- first conv ")
 		print( x.shape )
 		x = self.relu1( x )
@@ -55,7 +58,7 @@ class DecoderBlock( ):
 
 		x = self.deconv2( x )
 		x = self.norm2( x )
-		x.set_shape( tmp_shape )
+		#x.set_shape( tmp_shape )
 		
 		x = self.relu2(x )
 		x = self.conv3(x)
@@ -63,7 +66,7 @@ class DecoderBlock( ):
 		x = self.relu3(x)
 
 		print("output decoder")
-		x.set_shape( (None , spatial_dims[0] , spatial_dims[1] , self.n_filters ) )
+		#x.set_shape( (None , spatial_dims[0] , spatial_dims[1] , self.n_filters ) )
 		print( x.shape )
 
 		return x 
@@ -214,16 +217,16 @@ class LinkNet2( object ):
 		self.decoder3 = DecoderBlock(filters[2] , filters[0]  , input_shape = [-1 , 55 , 55 , 64] )
 		self.decoder4 = DecoderBlock(filters[2] , filters[2]  , input_shape = [-1 , 55, 55 , 64]  )
 
-		self.finaldeconv1 = Conv2DTranspose( 32 , kernel_size = 3 , strides=2 )
+		self.finaldeconv1 = Conv2DTranspose( 1 , kernel_size = 3 , strides=2 )
 		
 		#self.finaldeconv1.set_shape( [ None , 55 , 55 , 32 ]  )
 		self.finalrelu1 = Activation("relu")
-		self.finalup1 = UpSampling2D( (2,2) )
+		#self.finalup1 = UpSampling2D( (2,2) )
 		self.finalconv2 = Conv2D( 32 , kernel_size = 3)
 		self.finalrelu2 = Activation("relu")
-		self.finalup2 = UpSampling2D((2,2))
+		#self.finalup2 = UpSampling2D((2,2))
 		self.finalconv3 = Conv2D( filters  = self.num_classes , kernel_size = 2 )
-
+		
 
 	def get_input(self):
 

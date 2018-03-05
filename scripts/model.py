@@ -6,7 +6,7 @@ from keras.models import Sequential
 from keras.models import Model
 #from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D
 from keras.applications import ResNet50
-from keras.layers import Conv2D , MaxPooling2D , BatchNormalization , Activation , Conv2DTranspose , Input , UpSampling2D
+from keras.layers import Reshape , Conv2D , MaxPooling2D , BatchNormalization , Activation , Conv2DTranspose , Input , UpSampling2D , Dense
 from keras.losses import binary_crossentropy
 from keras.optimizers import Adam
 from keras.regularizers import l2
@@ -15,6 +15,7 @@ from keras.engine.topology import Layer
 
 from  encoders import *
 
+K.set_image_dim_ordering('tf')
 
 input_shape_resnet = ( 224 , 224  , 3)
 
@@ -63,6 +64,10 @@ def jaccard( y_true , y_pred):
 def loss( y_true , y_pred   ):
 
 	ws = 1.0 
+	print("true shape")
+	print( y_true.shape )
+	print("pred shape")
+	print(y_pred.shape)
 	return 1  + bce(y_true , y_pred , ws ) - dice( y_true , y_pred )
 
 def dice( y_true , y_pred ):
@@ -271,9 +276,9 @@ def get_model():
 def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 	K.set_image_data_format('channels_last')
 	linknet = LinkNet2( input_shape = input_shape_resnet )
-
+	K.set_image_dim_ordering('tf')
 	inputs = linknet.get_input().output 
-	inputs.set_shape( (2 , 224,224 , 3 ))
+	#inputs.set_shape( ( 2,224,224 , 3 ))
 	print( inputs.shape )
 	#inputs = Input(shape = input_shape_resnet )
 
@@ -300,23 +305,29 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 	#d4 = linknet.decoder4( e4 )
 
 	#d4 = linknet.decoder4.call2( e4 ) + e3
-	#e2 = UpSampling2D((2, 2))(  e2 ) 
-
 	#print( "e2 upsampled ")
 	#print(e2.shape)
-	d4 = linknet.decoder4.call2(e4 , ( e3.shape[1]  , e3.shape[2] )  )
+
+	d4 = linknet.decoder4.call2( e4  )
+	e3 = UpSampling2D((2,2))(e3)
 	d4 = keras.layers.Add() ([   e3 , d4  ] )
 
 	#d3 = linknet.decoder3.call2( d4 ) + e2
-	d3 = linknet.decoder3.call2(d4 , (e2.shape[1] , e3.shape[2]  )) 
-	d3 = keras.layers.Add() ([  d3 , e2 ] )
+	d3 = linknet.decoder3.call2(d4  )
+
+	#y = UpSampling2D((2,2) )( e2 )
+	x = UpSampling2D((2,2) )( e2 )
+	x = UpSampling2D((2,2))(x)
+	d3 = keras.layers.Add() ([  x , d3 ] )
 	#d2 = linknet.decoder2.call2( d3 )  + e1 
 
-	d2 = linknet.decoder2.call2(d3 , (e1.shape[1] , e1.shape[2])  )
-	d2 = keras.layers.Add() ([  d2 , e1 ] )
+	d2 = linknet.decoder2.call2(d3  )
+
+	y = UpSampling2D((8,8))(e1)
+	d2 = keras.layers.Add() ([  y , d2 ] ) # 440 , 440 , 64
 	print( "dedede")
 	print( d2.shape )
-	d1 = linknet.decoder1.call2( d2 , ( d2.shape[1]  , d2.shape[2] ) )
+	d1 = linknet.decoder1.call2( d2  )
 	print( "decoders shape")
 
 	print( d4.shape )
@@ -324,38 +335,55 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 	print( d2.shape )
 	print( d1.shape )
 
+	y = Conv2D(  32 , kernel_size = (3,3) , strides = 2 , padding = "same" )( d1 )
+	y = Activation("relu")( y )
 
-	f1 = linknet.finaldeconv1( d1 )
-	#f1.set_shape( [ 2 , d1.shape[1] , d1.shape[2] , 32 ])
+	# [ None , 440 , 440 , 32]
 
-	f2 = Activation("relu")( f1 )
+	y = Conv2D( 16 , kernel_size =( 2,2) , strides = 2 , padding = "same") (y)
+	y = Activation("relu")(y)
 
-	#f2 = linknet.finalup1( f2 )
-	f3 = linknet.finalconv2( f2 )
-	f4 = linknet.finalrelu2( f3 )
-	#f4 = linknet.finalup2( f4 )
-	f5 = linknet.finalconv3( f4 )
+	# [ 220 , 220 , 16]
+	y = Conv2D( 8 , kernel_size=(2,2) , strides = 2 , padding= "same")(y)
+	y = Activation("relu")(y)
 
+	# [110 , 110 , 8]
+	y = Conv2D( 4 , kernel_size=(2,2) , strides = 2 , padding="same")(y)
+	y = Activation("relu")(y)
 
-	print( "last layer shapes")
-	print( f1.shape )
-	print( f2.shape )
-	print( f3.shape )
-	print( f4.shape )
-	print( f5.shape )
+	# {55 , 55 , 4} 
 
-	#f5.set_shape( (2 , 224 , 224 , 1 ))
-	#print( f5 )
-	#x = Conv2DTranspose( 32 , kernel_size = 3 , strides=2 )( d1 )
-	#x = Activation("relu")(x)
-	#x = Conv2D( 32 , kernel_size = 3)(x)
-	#x = Activation("relu")(x)
-	#x = Conv2D( filters  = 1 , kernel_size = 2 )(x)
-	print( "output_shape")
-	print( f5  )
-	#f5.set_output( (None, None, None))
-	model = Model( inputs = inputs , outputs = f5  )
+	rs = Reshape(   [55*55*4]  )( y )
+	size = 224*224
+	#flat = Flatten(  )( y )
+	fc = Dense( size   )( rs )
+	fc = Activation("relu")(fc)
 	
+	
+	output = Reshape( [ 224 , 224 , 1 ])(fc)
+	#fc.set_shape( ( None , 224 ,224 , 1  ) )
+	print("output")
+
+	print(output)
+
+	# [None , 220 , 220 , 32]
+
+
+
+	print("y fake")
+	print( y.shape )
+	
+	#f1 = linknet.finaldeconv1( d1 )
+	#f2 = Activation("relu")( f1 )
+	#f3 = linknet.finalconv2( f2 )
+	#f4 = linknet.finalrelu2( f3)
+	#f5 = linknet.finalconv3( f4 )
+
+	#print( f1.shape )
+	#f5.set_shape( (None , 224 , 224 , 1 ))
+	model = Model( inputs = inputs , outputs = output   )
+	
+	print( model.summary()  )
 	return model 
 
 

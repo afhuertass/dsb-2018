@@ -18,7 +18,7 @@ def fix_crop_transform( image , mask , x , y , w , h ):
 		image = image[y:y+h, x:x+w]
 		mask = mask[y:y+h, x:x+w  ]
 
-	print( image.shape )
+	#print( image.shape )
 	return image, mask
 
 
@@ -67,7 +67,8 @@ class DataGenerator(object):
 				imgs , masks = self._data_generation( prefix , labels , list_IDS_tmps )
 
 				#print("shape output generator")
-				#print( imgs.shape )
+				print("Generator")
+				print( masks.shape )
 				yield imgs , masks 
 
 
@@ -90,19 +91,20 @@ class DataGenerator(object):
 		X = np.empty(  ( self.batch_size , self.W , self.H  , self.channels) )
 		
 		# mascara y pesos
-		Y = np.empty( ( self.batch_size , self.W, self.H , 2   ) )
+		Y = np.empty( ( self.batch_size , self.W, self.H  , 1   ) )
 
 		for  i , idd in enumerate( list_IDS_tmps ):
 
 			x_partial = np.load( prefix +  "/imgs/" + str(idd) +'.npy')
-			y_partial = np.load( prefix + "/masks/" + str(idd) + ".npy" ) 
+			y_partial = np.load( prefix + "/masks/" + str(idd) + ".npy" )
+			y_partial = y_partial[: , : , 0 ]
 			#print(y_partial.shape)
 			x , y = transform_images( x_partial , y_partial , self.W , self.H )
-			
+			y = y.reshape( (self.W , self.H , 1 ) )
 			# 
 			X[ i , : , : , : ] = x
 
-			Y[ i , : , : , : ] = y
+			Y[ i , : , : , :   ] = y
 			#Y[ i , : , : , 1 ] = np.load(prefix  + "ws/" + idd + ".npy" )
 
 
