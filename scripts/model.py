@@ -277,8 +277,10 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 	K.set_image_data_format('channels_last')
 	linknet = LinkNet2( input_shape = input_shape_resnet )
 	K.set_image_dim_ordering('tf')
-	inputs = linknet.get_input().output 
-	#inputs.set_shape( ( 2,224,224 , 3 ))
+	#inputs = linknet.get_input().output 
+	#inputs.set_shape( ( None ,224,224 , 3 ))
+	inputs = linknet.get_input()
+	
 	print( inputs.shape )
 	#inputs = Input(shape = input_shape_resnet )
 
