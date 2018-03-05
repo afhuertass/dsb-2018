@@ -190,7 +190,7 @@ class LinkNet2( object ):
 	def build(self, input_shape ):
 		# aqui la red
 		filters = [ 64 , 128 , 256 , 512 ]
-		self.input = Input( (224, 224 , 3) )
+		self.input = Input( batch_shape = ( 2 ,224, 224 , 3) )
 
 		resnet = ResNet50(weights='imagenet', pooling=max, include_top = False , input_tensor=self.input  )
 		
@@ -198,7 +198,11 @@ class LinkNet2( object ):
 
 		#self.firstconv = resnet. conv1
 		self.firstconv = resnet.get_layer("conv1")
+		print("wtffffffffffffffffff")
+		print( self.firstconv.output_shape )
 		self.firstbn = resnet.get_layer("bn_conv1")
+		print( self.firstbn.output_shape )
+
 		self.firstrelu = resnet.get_layer("activation_1") 
 		self.firstmaxpool = resnet.get_layer("max_pooling2d_1")
 
