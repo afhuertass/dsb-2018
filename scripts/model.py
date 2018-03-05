@@ -280,7 +280,7 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 	#inputs = linknet.get_input().output 
 	#inputs.set_shape( ( None ,224,224 , 3 ))
 	inputs = linknet.get_input()
-	
+
 	print( inputs.shape )
 	#inputs = Input(shape = input_shape_resnet )
 
@@ -290,7 +290,7 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 	x = linknet.firstbn(x)
 	x = linknet.firstrelu(x)
 	x = linknet.firstmaxpool(x)
-	print("x shape")
+	print("input shape encoders")
 	print(x.shape)
 	e1 = linknet.encoder1.call2( x )
 	e2 = linknet.encoder2.call2( e1 )
