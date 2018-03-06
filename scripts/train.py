@@ -26,8 +26,8 @@ def train():
 	training_generator = DataGenerator(**params).generate( prefix , ids , ids )
 	linknet = model.get_model2( )
 
-	print( linknet.summary() )
-	#linknet.compile(loss = model.loss , optimizer = "adam"  , metrics=['accuracy'] )
+	#print( linknet.summary() )
+	linknet.compile(loss = model.loss , optimizer = "adam"  , metrics=['accuracy'] )
 
 	#linknet.fit_generator(generator = training_generator , steps_per_epoch = 2   )
 

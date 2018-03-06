@@ -57,6 +57,7 @@ class DecoderBlock( ):
 		tmp_shape = x.shape 
 
 		x = self.deconv2( x )
+
 		x = self.norm2( x )
 		#x.set_shape( tmp_shape )
 		
@@ -135,7 +136,8 @@ class Encoder3(  ):
 		
 
 	def call2(self , x ) :
-
+		print(" inputs encoder3 shape ")
+		print( x.shape )
 		x = self.c0( x )
 		p1 =  self.c1( self.max_polling.get_output_at(0) )
 		#p1.set_shape( x.shape )
@@ -189,31 +191,40 @@ class LinkNet2( object ):
 		#
 	def build(self, input_shape ):
 		# aqui la red
+		K.clear_session()
 		filters = [ 64 , 128 , 256 , 512 ]
-		self.input = Input( batch_shape = ( 2 ,224, 224 , 3) )
+		#self.input = Input(  (224, 224 , 3) )
+		self.input = Input( (224, 224 , 3) )
 
-		resnet = ResNet50(weights='imagenet', pooling=max, include_top = False , input_tensor=self.input  )
+		self.resnet = ResNet50(weights='imagenet', pooling=max, include_top = False , input_tensor=self.input  )
 		
 		#self.input = resnet.get_layer("input_1")
+		for layer in self.resnet.layers[:10]:
+			print("Layersss {}".format(  layer.name))
+			print( layer.input_shape )
+			print( layer.output_shape )
+			layer.trainable = False 
 
 		#self.firstconv = resnet. conv1
-		self.firstconv = resnet.get_layer("conv1")
+		self.firstpad = self.resnet.get_layer("conv1_pad")
+
+		self.firstconv = self.resnet.get_layer("conv1")
 		print("wtffffffffffffffffff")
 		print( self.firstconv.output_shape )
-		self.firstbn = resnet.get_layer("bn_conv1")
+		self.firstbn = self.resnet.get_layer("bn_conv1")
 		print( self.firstbn.output_shape )
 
-		self.firstrelu = resnet.get_layer("activation_1") 
-		self.firstmaxpool = resnet.get_layer("max_pooling2d_1")
+		self.firstrelu = self.resnet.get_layer("activation_1") 
+		self.firstmaxpool = self.resnet.get_layer("max_pooling2d_1")
 
 		#self.encoder1 = resnet.get_layer("activation_1")  #.activation_1 
-		self.encoder1 = Encoder1( resnet )
+		self.encoder1 = Encoder1( self.resnet )
 		#self.encoder2 = resnet.get_layer("activation_2") #activation_2 
-		self.encoder2 = Encoder2( resnet )
+		self.encoder2 = Encoder2( self.resnet )
 		#self.encoder3 = resnet.get_layer("activation_3") #activation_3
-		self.encoder3 = Encoder3(resnet , self.firstmaxpool )
+		self.encoder3 = Encoder3(self.resnet , self.firstmaxpool )
 		#self.encoder4 = resnet.get_layer("activation_4") #activation_4 
-		self.encoder4 = Encoder4( resnet  )
+		self.encoder4 = Encoder4( self.resnet  )
 
 		self.decoder1 = DecoderBlock(filters[0] , filters[0]  , input_shape = input_shape_resnet )
 		self.decoder2 = DecoderBlock(filters[1] , filters[0]  , input_shape = [-1 , 55 , 55 , 64] )

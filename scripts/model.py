@@ -252,6 +252,8 @@ class LinkNet( Layer):
 
 		d4 = self.decoder4( e4 ) + e3 
 		d3 = self.decoder3( d4 ) + e2 
+
+		
 		d2 = self.decoder2( d3) + e1 
 		d1 = self.decoder1( d2) 
 
@@ -283,8 +285,8 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 
 	print( inputs.shape )
 	#inputs = Input(shape = input_shape_resnet )
-
-	x = linknet.firstconv(inputs)
+	x = linknet.firstpad( inputs )
+	x = linknet.firstconv( x )
 	print("xxxxx shape")
 	print(x.shape)
 	x = linknet.firstbn(x)
@@ -358,7 +360,7 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 	rs = Reshape(   [55*55*4]  )( y )
 	size = 224*224
 	#flat = Flatten(  )( y )
-	fc = Dense( size   )( rs )
+	fc = Dense( size   )( rs  )
 	fc = Activation("relu")(fc)
 	
 	
@@ -369,12 +371,6 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 	print(output)
 
 	# [None , 220 , 220 , 32]
-
-
-
-	print("y fake")
-	print( y.shape )
-	
 	#f1 = linknet.finaldeconv1( d1 )
 	#f2 = Activation("relu")( f1 )
 	#f3 = linknet.finalconv2( f2 )
@@ -385,7 +381,6 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 	#f5.set_shape( (None , 224 , 224 , 1 ))
 	model = Model( inputs = inputs , outputs = output   )
 	
-	print( model.summary()  )
 	return model 
 
 
