@@ -6,7 +6,7 @@ from keras.models import Sequential
 from keras.models import Model
 #from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D
 from keras.applications import ResNet50
-from keras.layers import Reshape , Conv2D , MaxPooling2D , BatchNormalization , Activation , Conv2DTranspose , Input , UpSampling2D , Dense
+from keras.layers import Reshape, Lambda ,  Flatten , Conv2D , MaxPooling2D , BatchNormalization , Activation , Conv2DTranspose , Input , UpSampling2D , Dense
 from keras.losses import binary_crossentropy
 from keras.optimizers import Adam
 from keras.regularizers import l2
@@ -86,7 +86,7 @@ def bce( y_true,  y_pred , ws ) :
 	print( y_true.shape )
 	print( y_pred.shape )
 	
-	y_pred.set_shape( (None , None , None , 1 ))
+	#y_pred.set_shape( (None , None , None , 1 ))
 	
 	# return weigthed cross entropy 
 	return binary_crossentropy( y_true*ws , y_pred  )
@@ -253,7 +253,7 @@ class LinkNet( Layer):
 		d4 = self.decoder4( e4 ) + e3 
 		d3 = self.decoder3( d4 ) + e2 
 
-		
+
 		d2 = self.decoder2( d3) + e1 
 		d1 = self.decoder1( d2) 
 
@@ -356,19 +356,21 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 	y = Activation("relu")(y)
 
 	# {55 , 55 , 4} 
-
-	rs = Reshape(   [55*55*4]  )( y )
+	#y.set_shape( (2,55,55,4 ) )
+	rs = Lambda(  lambda x : x  , output_shape = (2,55,55,4) )(y) 
+	#rs = Reshape(   [55*55*4]  )( y )
+	rs = Flatten( ) (y )
 	size = 224*224
 	#flat = Flatten(  )( y )
-	fc = Dense( size   )( rs  )
+	fc = Dense( size   )(  rs  )
 	fc = Activation("relu")(fc)
-	
-	
-	output = Reshape( [ 224 , 224 , 1 ])(fc)
+	print("asdadasda")
+	print( fc.shape )
+	#utput = Reshape( ( -1 , ) )(fc)
 	#fc.set_shape( ( None , 224 ,224 , 1  ) )
 	print("output")
 
-	print(output)
+	#print(output)
 
 	# [None , 220 , 220 , 32]
 	#f1 = linknet.finaldeconv1( d1 )
@@ -379,8 +381,8 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 
 	#print( f1.shape )
 	#f5.set_shape( (None , 224 , 224 , 1 ))
-	model = Model( inputs = inputs , outputs = output   )
-	
+	model = Model( inputs = inputs , outputs = fc  )
+	print( model.summary() )
 	return model 
 
 

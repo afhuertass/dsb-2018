@@ -191,7 +191,7 @@ class LinkNet2( object ):
 		#
 	def build(self, input_shape ):
 		# aqui la red
-		K.clear_session()
+		
 		filters = [ 64 , 128 , 256 , 512 ]
 		#self.input = Input(  (224, 224 , 3) )
 		self.input = Input( (224, 224 , 3) )

@@ -29,7 +29,7 @@ def train():
 	#print( linknet.summary() )
 	linknet.compile(loss = model.loss , optimizer = "adam"  , metrics=['accuracy'] )
 
-	#linknet.fit_generator(generator = training_generator , steps_per_epoch = 2   )
+	linknet.fit_generator(generator = training_generator , steps_per_epoch = 2   )
 
 
 if __name__ =="__main__":
