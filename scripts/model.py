@@ -285,8 +285,8 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 
 	print( inputs.shape )
 	#inputs = Input(shape = input_shape_resnet )
-	x = linknet.firstpad( inputs )
-	x = linknet.firstconv( x )
+	#x = linknet.firstpad( inputs )
+	x = linknet.firstconv( inputs )
 	print("xxxxx shape")
 	print(x.shape)
 	x = linknet.firstbn(x)
