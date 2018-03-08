@@ -91,20 +91,22 @@ class DataGenerator(object):
 		X = np.empty(  ( self.batch_size , self.W , self.H  , self.channels) )
 		
 		# mascara y pesos
-		Y = np.empty( ( self.batch_size , self.W, self.H  , 1   ) )
+		Y = np.empty( ( self.batch_size , self.W*self.H    ) )
 
 		for  i , idd in enumerate( list_IDS_tmps ):
 
 			x_partial = np.load( prefix +  "/imgs/" + str(idd) +'.npy')
 			y_partial = np.load( prefix + "/masks/" + str(idd) + ".npy" )
 			y_partial = y_partial[: , : , 0 ]
+
 			#print(y_partial.shape)
 			x , y = transform_images( x_partial , y_partial , self.W , self.H )
 			y = y.reshape( (self.W , self.H , 1 ) )
+			y = y.flatten()
 			# 
 			X[ i , : , : , : ] = x
 
-			Y[ i , : , : , :   ] = y
+			Y[ i , :   ] = y
 			#Y[ i , : , : , 1 ] = np.load(prefix  + "ws/" + idd + ".npy" )
 
 

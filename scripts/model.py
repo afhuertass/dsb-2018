@@ -68,7 +68,7 @@ def loss( y_true , y_pred   ):
 	print( y_true.shape )
 	print("pred shape")
 	print(y_pred.shape)
-	return 1  + bce(y_true , y_pred , ws ) - dice( y_true , y_pred )
+	return 1  + bce(y_true , y_pred , ws ) - jaccard( y_true , y_pred )
 
 def dice( y_true , y_pred ):
 	smooth = 1 
@@ -357,7 +357,12 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 
 	# {55 , 55 , 4} 
 	#y.set_shape( (2,55,55,4 ) )
-	rs = Lambda(  lambda x : x  , output_shape = (2,55,55,4) )(y) 
+
+	y = Conv2D( 4 , kernel_size=(5,5) , strides = 2 )(y)
+	y = Activation("relu")(y)
+
+	# ( 25 , 25 , 4 )
+	rs = Lambda(  lambda x : x  , output_shape = (2,26,26,4) )(y) 
 	#rs = Reshape(   [55*55*4]  )( y )
 	rs = Flatten( ) (y )
 	size = 224*224
