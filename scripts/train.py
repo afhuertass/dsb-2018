@@ -22,14 +22,23 @@ params = {'imw': 32,
 
 def train():
 
+	ids = range( 1, 600)
+
+
+	kf = KFold(n_splits= 4  , random_state = seed , shuffle = True ) 
+
+	for ids_train , ids_valid in kf.split( ids ):
+
+		training_generator = DataGenerator(**params ).generate( prefix , ids_train , ids_train )
+		eval_generator = DataGenerator(**)params.generate(prefix , ids_valid , ids_valid )
+		linknet = model.get_model2()
+
+		linknet.compile(loss = model.loss , optimizer = "adam"  , metrics=['accuracy'] )
+		linknet.fit_generator(generator = training_generator , steps_per_epoch = 100  )
+
+	#training_generator = DataGenerator(**params).generate( prefix , ids , ids )
 	
-	training_generator = DataGenerator(**params).generate( prefix , ids , ids )
-	linknet = model.get_model2( )
 
-	#print( linknet.summary() )
-	linknet.compile(loss = model.loss , optimizer = "adam"  , metrics=['accuracy'] )
-
-	linknet.fit_generator(generator = training_generator , steps_per_epoch = 100  )
 
 
 if __name__ =="__main__":
