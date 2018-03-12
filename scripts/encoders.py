@@ -206,7 +206,7 @@ class LinkNet2( object ):
 			layer.trainable = False 
 
 		#self.firstconv = resnet. conv1
-		self.firstpad = self.resnet.get_layer("conv1_pad")
+		#self.firstpad = self.resnet.get_layer("conv1_pad")
 
 		self.firstconv = self.resnet.get_layer("conv1")
 		print("wtffffffffffffffffff")

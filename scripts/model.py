@@ -8,6 +8,8 @@ from keras.models import Model
 from keras.applications import ResNet50
 from keras.layers import Reshape, Lambda ,  Flatten , Conv2D , MaxPooling2D , BatchNormalization , Activation , Conv2DTranspose , Input , UpSampling2D , Dense
 from keras.losses import binary_crossentropy
+
+
 from keras.optimizers import Adam
 from keras.regularizers import l2
 from keras import backend as K
@@ -68,7 +70,7 @@ def loss( y_true , y_pred   ):
 	print( y_true.shape )
 	print("pred shape")
 	print(y_pred.shape)
-	return 1  + bce(y_true , y_pred , ws ) - jaccard( y_true , y_pred )
+	return 1  + bce(y_true , y_pred , ws ) - dice( y_true , y_pred )
 
 def dice( y_true , y_pred ):
 	smooth = 1 
@@ -285,8 +287,8 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 
 	print( inputs.shape )
 	#inputs = Input(shape = input_shape_resnet )
-	x = linknet.firstpad( inputs )
-	x = linknet.firstconv( x )
+	#x = linknet.firstpad( inputs )
+	x = linknet.firstconv( inputs )
 	print("xxxxx shape")
 	print(x.shape)
 	x = linknet.firstbn(x)
