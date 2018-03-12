@@ -49,7 +49,7 @@ def jaccard( y_true , y_pred):
 	# implementation of jaccard distance loss 
 	# recordar que la mascara esta contamidada con los pesos 
 	# y_true includes de weigths 
-	y_true = y_true[: , : , : , 0 ]
+	#y_true = y_true[: , : , : , 0 ]
 
 	smooth = 100 
 	
@@ -340,25 +340,30 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 	print( d1.shape )
 
 	y = Conv2D(  32 , kernel_size = (3,3) , strides = 2 , padding = "same" )( d1 )
+	y = BatchNormalization( )(y)
 	y = Activation("relu")( y )
 
 	# [ None , 440 , 440 , 32]
 
 	y = Conv2D( 16 , kernel_size =( 2,2) , strides = 2 , padding = "same") (y)
+	y = BatchNormalization( )(y)
 	y = Activation("relu")(y)
 
 	# [ 220 , 220 , 16]
 	y = Conv2D( 8 , kernel_size=(2,2) , strides = 2 , padding= "same")(y)
+	y = BatchNormalization( )(y)
 	y = Activation("relu")(y)
 
 	# [110 , 110 , 8]
 	y = Conv2D( 4 , kernel_size=(2,2) , strides = 2 , padding="same")(y)
+	y = BatchNormalization( )(y)
 	y = Activation("relu")(y)
 
 	# {55 , 55 , 4} 
 	#y.set_shape( (2,55,55,4 ) )
 
 	y = Conv2D( 4 , kernel_size=(5,5) , strides = 2 )(y)
+	y = BatchNormalization( )(y)
 	y = Activation("relu")(y)
 
 	# ( 25 , 25 , 4 )
