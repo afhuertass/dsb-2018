@@ -24,29 +24,7 @@ input_shape_resnet = ( 224 , 224  , 3)
 premodels = {
 	"resnet" : ResNet50
 }
-lencoder1 = [
-"res2a_branch2a" ,
- "bn2a_branch2a" ,
- "activation_2" ,
-]
 
-lencoder2 = ["res2a_branch2b" ,
-"bn2a_branch2b" ,
-"activation_3" ,
-]
-lencoder3 = [
-"res2a_branch2b" ,
- "bn2a_branch2b" , 
- "activation_3"
-]
-lencoder4 = [
-"res2a_branch2c" , 
- "res2a_branch1" , 
- "bn2a_branch2c" ,
- "bn2a_branch1" ,
- "add_1" ,
- "activation_4" 
-]
 def jaccard( y_true , y_pred): 
 	# implementation of jaccard distance loss 
 	# recordar que la mascara esta contamidada con los pesos 
