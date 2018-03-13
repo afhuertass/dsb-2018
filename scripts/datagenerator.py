@@ -1,6 +1,6 @@
 import numpy as np 
 import pandas as pd 
-
+from scipy.misc import imresize
 # generador de los datos para  alimentar el modelo 
 def fix_crop_transform( image , mask , x , y , w , h ):
 
@@ -67,7 +67,7 @@ class DataGenerator(object):
 				imgs , masks = self._data_generation( prefix , labels , list_IDS_tmps )
 
 				#print("shape output generator")
-				print("Generator")
+				print("Generator mask seee")
 				print( masks.shape )
 				yield imgs , masks 
 
@@ -91,18 +91,23 @@ class DataGenerator(object):
 		X = np.empty(  ( self.batch_size , self.W , self.H  , self.channels) )
 		
 		# mascara y pesos
-		Y = np.empty( ( self.batch_size , self.W*self.H    ) )
+		h = 220
+		Y = np.empty( ( self.batch_size , h , h , 1    ) )
 
 		for  i , idd in enumerate( list_IDS_tmps ):
 
 			x_partial = np.load( prefix +  "/imgs/" + str(idd) +'.npy')
 			y_partial = np.load( prefix + "/masks/" + str(idd) + ".npy" )
+
 			y_partial = y_partial[: , : , 0 ]
 
 			#print(y_partial.shape)
 			x , y = transform_images( x_partial , y_partial , self.W , self.H )
-			y = y.reshape( (self.W , self.H , 1 ) )
-			y = y.flatten()
+			#y = y.reshape( (self.W , self.H  ) )
+
+			y = imresize(y , (220 , 220  )  )
+			y = y.reshape( (h , h , 1)  )
+			#y = y.flatten()
 			# 
 			X[ i , : , : , : ] = x
 

@@ -44,11 +44,12 @@ def jaccard( y_true , y_pred):
 def loss( y_true , y_pred   ):
 
 	ws = 1.0 
-	print("true shape")
-	print( y_true.shape )
-	print("pred shape")
-	print(y_pred.shape)
-	return 1  + bce(y_true , y_pred , ws ) - dice( y_true , y_pred )
+	
+	_bce = bce(y_true , y_pred , ws )
+	_jaqq = jaccard( y_true , y_pred )
+	print("bce:{}".format( _bce) )
+	print("_jaqq:{}".format( _jaqq ) )
+	return 1  + _bce - _jaqq
 
 def dice( y_true , y_pred ):
 	smooth = 1 
@@ -259,14 +260,18 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 	K.set_image_data_format('channels_last')
 	linknet = LinkNet2( input_shape = input_shape_resnet )
 	K.set_image_dim_ordering('tf')
+
 	#inputs = linknet.get_input().output 
 	#inputs.set_shape( ( None ,224,224 , 3 ))
 	inputs = linknet.get_input()
 
 	print( inputs.shape )
 	#inputs = Input(shape = input_shape_resnet )
-	#x = linknet.firstpad( inputs )
-	x = linknet.firstconv( inputs )
+	# lines to work with de padding layer 
+	x = linknet.firstpad( inputs )
+	x = linknet.firstconv( x )
+
+	#x = linknet.firstconv( inputs )
 	print("xxxxx shape")
 	print(x.shape)
 	x = linknet.firstbn(x)
@@ -329,10 +334,15 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 	y = BatchNormalization( )(y)
 	y = Activation("relu")(y)
 
-	# [ 220 , 220 , 16]
-	y = Conv2D( 8 , kernel_size=(2,2) , strides = 2 , padding= "same")(y)
-	y = BatchNormalization( )(y)
-	y = Activation("relu")(y)
+	# Output [ 220 , 220 , 16]
+
+	output_final = Conv2D( 1 , kernel_size=(1,1) )( y )
+
+
+
+	#y = Conv2D( 8 , kernel_size=(2,2) , strides = 2 , padding= "same")(y)
+	#y = BatchNormalization( )(y)
+	#y = Activation("relu")(y)
 
 	# [110 , 110 , 8]
 	y = Conv2D( 4 , kernel_size=(2,2) , strides = 2 , padding="same")(y)
@@ -346,7 +356,11 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 	y = BatchNormalization( )(y)
 	y = Activation("relu")(y)
 
-	# ( 25 , 25 , 4 )
+	#y = Conv2D( 2 , kernel_size=(5,5) , strides = 2 )(y)
+	#y = BatchNormalization( )(y)
+	#y = Activation("relu")(y)
+
+	# ( 13 , 13 , 2 )
 	rs = Lambda(  lambda x : x  , output_shape = (2,26,26,4) )(y) 
 	#rs = Reshape(   [55*55*4]  )( y )
 	rs = Flatten( ) (y )
@@ -371,7 +385,8 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 
 	#print( f1.shape )
 	#f5.set_shape( (None , 224 , 224 , 1 ))
-	model = Model( inputs = inputs , outputs = fc  )
+	model = Model( inputs = inputs , outputs = output_final  )
+	
 	print( model.summary() )
 	return model 
 
