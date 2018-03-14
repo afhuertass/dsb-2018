@@ -67,8 +67,8 @@ class DataGenerator(object):
 				imgs , masks = self._data_generation( prefix , labels , list_IDS_tmps )
 
 				#print("shape output generator")
-				print("Generator mask seee")
-				print( masks.shape )
+				#print("Generator mask seee")
+				#print( masks.shape )
 				yield imgs , masks 
 
 

@@ -339,7 +339,7 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 	output_final = Conv2D( 1 , kernel_size=(1,1) )( y )
 
 
-
+	"""
 	#y = Conv2D( 8 , kernel_size=(2,2) , strides = 2 , padding= "same")(y)
 	#y = BatchNormalization( )(y)
 	#y = Activation("relu")(y)
@@ -385,8 +385,9 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 
 	#print( f1.shape )
 	#f5.set_shape( (None , 224 , 224 , 1 ))
+	"""
 	model = Model( inputs = inputs , outputs = output_final  )
-	
+
 	print( model.summary() )
 	return model 
 
