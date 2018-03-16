@@ -336,7 +336,7 @@ def get_model2(  input_shape = input_shape_resnet , num_classes = 1  ):
 
 	# Output [ 220 , 220 , 16]
 
-	output_final = Conv2D( 1 , kernel_size=(1,1) )( y )
+	output_final = Conv2D( 1 , kernel_size=(1,1) , activation="sigmoid" )( y )
 
 
 	"""
