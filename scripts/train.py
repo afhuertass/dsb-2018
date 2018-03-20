@@ -10,6 +10,8 @@ from sklearn.model_selection import KFold
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras import backend as K
 from scipy.misc import imsave
+from keras import optimizers
+from keras.models import load_model 
 batch_size = 2
 prefix = "../data/ready"
 prefix_model = "../models/"
@@ -21,6 +23,11 @@ params = {'imw': 32,
 'batch_size': batch_size,
 'shuffle': True}
 
+params2 = {'imw': 32,
+'imh': 32,
+'channels': 3,
+'batch_size': batch_size,
+'shuffle': False }
 
 def save_preds( preds , fold  ):
 
@@ -41,9 +48,8 @@ def train():
 	epochs = 1000
 	cvscores = [] 
 	for train_index , test_index in kf.split(ids):
-
-		print( train_index )  
-		
+		valid_steps = len(  test_index   )/batch_size 
+		steps_per_epoch =   len(train_index) / (2*batch_size)  # 2 
 
 		#print( train_index[[1,2,3,4,5,6]])
 		callbacks = [EarlyStopping(monitor='val_loss', patience=5),
@@ -57,11 +63,14 @@ def train():
 		linknet = model.get_model2( )
 
 	#print( linknet.summary() )
-		linknet.compile(loss = model.loss , optimizer = "adam"  , metrics=['accuracy']  )
+		learning_rate = 1e-4  
+		decay_rate = learning_rate/ epochs 
+
+		optimizer = optimizers.Adam(lr = learning_rate , decay = decay_rate  )
+		linknet.compile(loss = model.loss , optimizer = "adam"  , metrics=['accuracy' , model.dice ]  )
 		#tensorboard = TensorBoard(log_dir="logs/{}".format(time()))
 
-		valid_steps = len(  test_index   )/batch_size 
-		steps_per_epoch =   len(train_index) / (2*batch_size)  # 2 
+		
 
 		linknet.fit_generator(generator = training_generator , steps_per_epoch = steps_per_epoch  , callbacks = callbacks , validation_data = valid_generator
 			 , validation_steps = valid_steps , epochs = epochs
@@ -81,7 +90,31 @@ def train():
 
 		print("loss fold {}:{} ".format(   i  , sc ) )
 
+def predict():
+
+	ll  = [ ]
+	for i in range(0,4):
+		K.clear_session()
+		f = "../models/best_m_{}".format(i)
+		ids = np.arange(1, 604)
+		test_index = np.arange(500)
+		valid_generator = DataGenerator(**params2).generate( prefix , ids[test_index] , ids[test_index] )
+
+		ln = model.get_model2()
+		ln.load_weights( f )
+		ln.compile(loss = model.loss , optimizer = "adam"  , metrics=['accuracy' , model.dice ]  )
+
+		scores = ln.evaluate_generator( generator = valid_generator , steps = 50 )
+
+		print(scores)
+		ll.append( scores )
+		del ln 
+		#return None 
+
+	for l in ll:
+		print(l)
 
 if __name__ =="__main__":
 
-	train()
+	#train()
+	predict()
