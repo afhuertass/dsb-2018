@@ -1,6 +1,9 @@
 import numpy as np 
 import pandas as pd 
 from scipy.misc import imresize
+
+import cv2
+
 # generador de los datos para  alimentar el modelo 
 def fix_crop_transform( image , mask , x , y , w , h ):
 
@@ -35,6 +38,7 @@ def transform_images(  img , mask , w ,  h  ):
 	else:
 		x=0
 
+
 	return fix_crop_transform(img, mask, x,y,w,h)
 
 
@@ -49,7 +53,8 @@ class DataGenerator(object):
 		self.batch_size = batch_size
 		self.shuffle = shuffle
 		self.H = 224
-		self.W = 224 
+		self.W = 224
+		self.clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
 
 	def generate(self , prefix , labels , list_IDS):
 
@@ -104,11 +109,15 @@ class DataGenerator(object):
 			#print(y_partial.shape)
 			x , y = transform_images( x_partial , y_partial , self.W , self.H )
 			#y = y.reshape( (self.W , self.H  ) )
-
+			# transform mask
 			y = imresize(y , (220 , 220  )  )
 			y = y.reshape( (h , h , 1)  )
-			#y = y.flatten()
-			# 
+
+			# Transform X 
+			x_gray = cv2.cvtColor( x , cv2.COLOR_BGR2GRAY)
+			x = self.clahe.apply( x_gray )
+			x = cv2.cvtColor( x , cv2.COLOR_GRAY2BGR )
+			
 			X[ i , : , : , : ] = x
 
 			Y[ i , :   ] = y

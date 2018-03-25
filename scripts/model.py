@@ -46,10 +46,11 @@ def loss( y_true , y_pred   ):
 	ws = 1.0 
 	
 	_bce = bce(y_true , y_pred , ws )
-	_jaqq = jaccard( y_true , y_pred )
-	print("bce:{}".format( _bce) )
-	print("_jaqq:{}".format( _jaqq ) )
-	return 1  + _bce - _jaqq
+	#_jaqq = jaccard( y_true , y_pred )
+	_dice = dice( y_true , y_pred )
+	#print("bce:{}".format( _bce) )
+	#print("_jaqq:{}".format( _jaqq ) )
+	return  1 +_bce - _dice
 
 def dice( y_true , y_pred ):
 	smooth = 1 
