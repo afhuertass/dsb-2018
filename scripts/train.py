@@ -20,7 +20,11 @@ params = {'imw': 32,
 'channels': 3,
 'batch_size': batch_size,
 'shuffle': True}
-
+params2 = {'imw': 32,
+'imh': 32,
+'channels': 3,
+'batch_size': batch_size,
+'shuffle': False}
 
 def save_preds( preds , fold  ):
 
@@ -50,7 +54,7 @@ def train():
              ModelCheckpoint(filepath= prefix_model+"best_m_{}".format(fold), monitor='val_loss', save_best_only=True)]
 
 		training_generator = DataGenerator(**params).generate( prefix , ids[train_index] , ids[train_index] )
-		valid_generator = DataGenerator(**params).generate( prefix , ids[test_index] , ids[test_index] )
+		valid_generator = DataGenerator(**params2).generate( prefix , ids[test_index] , ids[test_index] )
 
 		
 		K.clear_session()
