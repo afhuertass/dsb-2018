@@ -4,7 +4,7 @@ from skimage import io
 import os
 import pickle 
 from scipy import ndimage
-
+from scipy.misc import imresize
 def getWs( mask ):
 
 
@@ -15,9 +15,28 @@ def getWs( mask ):
 	return 3*transf 
 
 
+def prepare_test( path , output ):
+
+	test_files = os.listdir( path )
+	imgs = []
+
+	all_files = [  path + x + '/images/' + x + ".png"  for x in test_files ]
+	print( len(all_files))
+	for  file in  all_files :
+
+		img = io.imread( file ) 
+		img = img[: , : ,  0:3 ]
+		img = imresize(  img , (224 , 224 ,3 ) )
+		imgs.append( img )
+
+	indx = 0 
+	for img   in imgs:
+
+		np.save( output + "/imgs/{}.npy".format(indx) , img  )
+		indx = indx + 1
 
 
-def prepare_data( paths , output  ):
+def prepare_data( paths , output , is_train = True  ):
 
 	# 
 	train_files = os.listdir( paths )
@@ -33,6 +52,7 @@ def prepare_data( paths , output  ):
 		img = img[: , : , 0:3 ]
 		print( img.shape )
 		imgs.append( img )
+
 
 		mask_files = os.listdir( paths + train_file + "/masks" )
 		mask_files = [   mask for mask in mask_files if mask.endswith(".png")  ]
@@ -74,7 +94,7 @@ def prepare_data( paths , output  ):
 if __name__ == "__main__":
 	paths = "../data/data/"
 	output = "../data/ready"
-	prepare_data( paths , output)
-
+	#prepare_data( paths , output)
+	prepare_test( "../data/test/" , "../data/ready_test" )
 
 

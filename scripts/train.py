@@ -28,7 +28,7 @@ params2 = {'imw': 32,
 'channels': 3,
 'batch_size': batch_size,
 'shuffle': False }
-
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 def save_preds( preds , fold  ):
 
 	for  i , im in enumerate(preds):
@@ -90,7 +90,7 @@ def train():
 
 		print("loss fold {}:{} ".format(   i  , sc ) )
 
-def predict():
+def predict_eval():
 
 	ll  = [ ]
 	for i in range(0,4):
@@ -114,7 +114,40 @@ def predict():
 	for l in ll:
 		print(l)
 
+
+def predict_test():
+
+	ll  = [ ]
+	Xs = []
+
+	for i in range(65):
+
+		x = np.load( "../data/ready_test/imgs/{}.npy".format(i)  )
+		Xs.append(x)
+
+	Xs = np.array( Xs )
+	for i in range(0,4):
+		K.clear_session()
+		f = "../models/best_m_{}".format(i)
+		ids = np.arange(1, 604)
+		test_index = np.arange(500)
+
+
+
+		ln = model.get_model2()
+		ln.load_weights( f )
+		ln.compile(loss = model.loss , optimizer = "adam"  , metrics=['accuracy' , model.dice ]  )
+
+		scores = ln.predict( Xs )
+
+		ll.append( scores )
+		del ln 
+		#return None 
+
+
+	np.save( "./preds.npy" , np.array( ll ))
+
 if __name__ =="__main__":
 
 	#train()
-	predict()
+	predict_test()
