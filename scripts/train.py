@@ -29,6 +29,7 @@ params2 = {'imw': 32,
 'batch_size': batch_size,
 'shuffle': False }
 os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
 def save_preds( preds , fold  ):
 
 	for  i , im in enumerate(preds):
@@ -56,7 +57,7 @@ def train():
              ModelCheckpoint(filepath= prefix_model+"best_m_{}".format(fold), monitor='val_loss', save_best_only=True)]
 
 		training_generator = DataGenerator(**params).generate( prefix , ids[train_index] , ids[train_index] )
-		valid_generator = DataGenerator(**params).generate( prefix , ids[test_index] , ids[test_index] )
+		valid_generator = DataGenerator(**params2).generate( prefix , ids[test_index] , ids[test_index] )
 
 		
 		K.clear_session()
